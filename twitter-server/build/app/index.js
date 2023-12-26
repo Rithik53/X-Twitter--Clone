@@ -25,11 +25,13 @@ function initserver() {
             typeDefs: `
         type Query {
             sayHello: String
+            sayHelloToMe(name: String!): String
         }
         `,
             resolvers: {
                 Query: {
                     sayHello: () => `Hello From graphql server`,
+                    sayHelloToMe: (parent, { name }) => `hey ${name}`
                 },
             },
         });
