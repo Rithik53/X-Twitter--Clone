@@ -4,6 +4,7 @@ import { User } from "@prisma/client";
 const dotenv = require("dotenv");
 dotenv.config();
 const JWT_SECRET= "$ok@twitter";
+// const JWT_SECRET= process.env.JWT_secret;
 class JWTService{
     public static  generateTokenForUser(user: User){
         const payload={

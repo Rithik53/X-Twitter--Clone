@@ -7,6 +7,7 @@ const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const dotenv = require("dotenv");
 dotenv.config();
 const JWT_SECRET = "$ok@twitter";
+// const JWT_SECRET= process.env.JWT_secret;
 class JWTService {
     static generateTokenForUser(user) {
         const payload = {
