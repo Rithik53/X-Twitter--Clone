@@ -4,8 +4,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-const dotenv = require("dotenv");
-dotenv.config();
 const JWT_SECRET = "$ok@twitter";
 // const JWT_SECRET= process.env.JWT_secret;
 class JWTService {
@@ -16,6 +14,14 @@ class JWTService {
         };
         const token = jsonwebtoken_1.default.sign(payload, JWT_SECRET);
         return token;
+    }
+    static decodeToken(token) {
+        try {
+            return jsonwebtoken_1.default.verify(token, JWT_SECRET);
+        }
+        catch (error) {
+            return null;
+        }
     }
 }
 exports.default = JWTService;

@@ -1,6 +1,7 @@
 import axios from 'axios'
 import { prismaclient } from '../../clients/db';
 import JWTService from '../../services/jwt';
+import { GraphqlContext } from '../../interfaces';
 
 interface GoogleTokenResult{
     iss?:  string;
@@ -55,6 +56,14 @@ const queries = {
             console.error(error);
             throw new Error("Token verification failed"); // Return an error message or handle as needed
         }
+    },
+    getCurrentUser : async(parent:any, args:any ,ctx:GraphqlContext)=>{
+        //console.log(ctx);
+        const id = ctx.user?.id;
+        if(!id) return null;
+
+        const user = await prismaclient.user.findUnique({where:{id}});
+        return user;
     }
 };
 

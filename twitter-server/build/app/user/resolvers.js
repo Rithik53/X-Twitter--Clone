@@ -50,6 +50,15 @@ const queries = {
             console.error(error);
             throw new Error("Token verification failed"); // Return an error message or handle as needed
         }
+    }),
+    getCurrentUser: (parent, args, ctx) => __awaiter(void 0, void 0, void 0, function* () {
+        var _a;
+        //console.log(ctx);
+        const id = (_a = ctx.user) === null || _a === void 0 ? void 0 : _a.id;
+        if (!id)
+            return null;
+        const user = yield db_1.prismaclient.user.findUnique({ where: { id } });
+        return user;
     })
 };
 exports.resolvers = { queries };
