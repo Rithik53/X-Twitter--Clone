@@ -2,26 +2,16 @@ import { Tweet } from "@prisma/client";
 import { prismaclient } from "../../clients/db";
 import { GraphqlContext } from "../../interfaces";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
-import * as dotenv from "dotenv";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import UserService from "../../services/user";
+import TweetService, { CreateTweetPayload } from "../../services/tweet";
 
-dotenv.config();
-
-interface CreateTweetPayload {
-  content: string;
-  imageURL?: string;
-}
 const s3Client = new S3Client({
-  region: "ap-south-1",
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID || "",
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || "",
-  },
+  region: process.env.AWS_DEFAULT_REGION,
 });
 
 const queries = {
-  getAllTweets: () =>
-    prismaclient.tweet.findMany({ orderBy: { createdAt: "desc" } }),
+  getAllTweets: () => TweetService.getAllTweets(),
   getSignedURLForTweet: async (
     parent: any,
     { imageType, imageName }: { imageType: string; imageName: string },
@@ -33,7 +23,7 @@ const queries = {
       throw new Error("Unsupported Image Type");
 
     const putObjectCommand = new PutObjectCommand({
-      Bucket: "rithik-twitter-dev",
+      Bucket: process.env.AWS_S3_BUCKET,
       Key: `uploads/${
         ctx.user.id
       }/tweets/${imageName}-${Date.now().toString()}.${imageType}`,
@@ -50,12 +40,9 @@ const mutations = {
     ctx: GraphqlContext
   ) => {
     if (!ctx.user) throw new Error("You are not authenticated");
-    const tweet = await prismaclient.tweet.create({
-      data: {
-        content: payload.content,
-        imageURL: payload.imageURL,
-        author: { connect: { id: ctx.user.id } },
-      },
+    const tweet = await TweetService.createTweet({
+      ...payload,
+      userId: ctx.user.id,
     });
 
     return tweet;
@@ -64,8 +51,7 @@ const mutations = {
 
 const extraResolvers = {
   Tweet: {
-    author: (parent: Tweet) =>
-      prismaclient.user.findUnique({ where: { id: parent.authorId } }),
+    author: (parent: Tweet) => UserService.getUserById(parent.authorId),
   },
 };
 

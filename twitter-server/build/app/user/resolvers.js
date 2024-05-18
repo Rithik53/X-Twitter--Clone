@@ -13,45 +13,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.resolvers = void 0;
-const axios_1 = __importDefault(require("axios"));
 const db_1 = require("../../clients/db");
-const jwt_1 = __importDefault(require("../../services/jwt"));
+const user_1 = __importDefault(require("../../services/user"));
 const queries = {
     verifyGoogleToken: (parent, { token }) => __awaiter(void 0, void 0, void 0, function* () {
-        try {
-            const googleToken = token;
-            const googleOauthURL = new URL("https://oauth2.googleapis.com/tokeninfo");
-            googleOauthURL.searchParams.set("id_token", googleToken);
-            const { data } = yield axios_1.default.get(googleOauthURL.toString(), {
-                responseType: "json",
-            });
-            const user = yield db_1.prismaclient.user.findUnique({
-                where: { email: data.email },
-            });
-            if (!user && data.email && data.given_name) {
-                yield db_1.prismaclient.user.create({
-                    data: {
-                        email: data.email,
-                        firstName: data.given_name,
-                        lastName: data.family_name,
-                        profileImageURL: data.picture,
-                    },
-                });
-            }
-            const userInDb = yield db_1.prismaclient.user.findUnique({
-                where: { email: data.email },
-            });
-            if (!userInDb)
-                throw new Error("user with email not found");
-            const userToken = yield jwt_1.default.generateTokenForUser(userInDb);
-            //console.log(data);
-            // console.log(JSON.stringify(data));
-            return userToken;
-        }
-        catch (error) {
-            console.error(error);
-            throw new Error("Token verification failed"); // Return an error message or handle as needed
-        }
+        const resultToken = yield user_1.default.verifyGoogleAuthToken(token);
+        return resultToken;
     }),
     getCurrentUser: (parent, args, ctx) => __awaiter(void 0, void 0, void 0, function* () {
         var _a;
@@ -59,10 +26,10 @@ const queries = {
         const id = (_a = ctx.user) === null || _a === void 0 ? void 0 : _a.id;
         if (!id)
             return null;
-        const user = yield db_1.prismaclient.user.findUnique({ where: { id } });
+        const user = yield user_1.default.getUserById(id);
         return user;
     }),
-    getUserById: (parent, { id }, ctx) => __awaiter(void 0, void 0, void 0, function* () { return db_1.prismaclient.user.findUnique({ where: { id } }); }),
+    getUserById: (parent, { id }, ctx) => __awaiter(void 0, void 0, void 0, function* () { return user_1.default.getUserById(id); }),
 };
 const extraResolvers = {
     User: {
