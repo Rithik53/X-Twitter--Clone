@@ -11,12 +11,14 @@ import {
 import FeedCard from "@/components/FeedCard";
 import { SlOptions } from "react-icons/sl";
 import { CredentialResponse, GoogleLogin } from "@react-oauth/google";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import toast from "react-hot-toast";
 import { graphqlClient } from "@/clients/api";
 import { verifyUserGoogleTokenQuery } from "@/graphql/query/user";
 import { useCurrentUser } from "@/hooks/user";
 import { useQueryClient } from "@tanstack/react-query";
+import { useCreateTweet, useGetAllTweets } from "@/hooks/tweet";
+import { Tweet } from "@/gql/graphql";
 
 interface TwitterSidebarButton {
   title: string;
@@ -60,14 +62,23 @@ const sidebarMenuItems: TwitterSidebarButton[] = [
 export default function Home() {
   const { user } = useCurrentUser();
   // console.log(user);
+  const { tweets = [] } = useGetAllTweets();
+  const { mutate } = useCreateTweet();
   const queryClient = useQueryClient();
+  const [content, setContent] = useState("");
 
   const handlesSelectImage = useCallback(() => {
     const input = document.createElement("input");
     input.setAttribute("type", "file");
     input.setAttribute("accept", "image/*");
     input.click();
-  });
+  }, []);
+
+  const handleCreateTweet = useCallback(() => {
+    mutate({
+      content,
+    });
+  }, [content, mutate]);
 
   const handleLoginWithGoogle = useCallback(
     async (cred: CredentialResponse) => {
@@ -148,6 +159,8 @@ export default function Home() {
               </div>
               <div className="col-span-11">
                 <textarea
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
                   className=" w-full bg-transparent text-xl px-3 border-b border-slate-700"
                   placeholder="What's happening?"
                   rows={3}
@@ -157,21 +170,27 @@ export default function Home() {
                     onClick={handlesSelectImage}
                     className="text-xl"
                   />
-                  <button className="bg-[#1d9bf0] font-semibold py-2 px-4 rounded-full text-sm  ">
+                  <button
+                    onClick={handleCreateTweet}
+                    className="bg-[#1d9bf0] font-semibold py-2 px-4 rounded-full text-sm  "
+                  >
                     Tweet
                   </button>
                 </div>
               </div>
             </div>
           </div>
+          {tweets?.map((tweet) =>
+            tweet ? <FeedCard key={tweet?.id} data={tweet as Tweet} /> : null
+          )}
+          {/* <FeedCard />
           <FeedCard />
           <FeedCard />
           <FeedCard />
           <FeedCard />
           <FeedCard />
           <FeedCard />
-          <FeedCard />
-          <FeedCard />
+          <FeedCard /> */}
         </div>
         <div className="col-span-3 p-5 ">
           {!user && (
