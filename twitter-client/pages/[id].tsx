@@ -128,7 +128,9 @@ export const getServerSideProps: GetServerSideProps<ServerProps> = async (
 
   if (!id) return { notFound: true, props: { userInfo: undefined } };
 
-  const userInfo = await graphqlClient.request(getUserByIdQuery, { id });
+  const userInfo = await graphqlClient.request(getUserByIdQuery, {
+    id: id as string,
+  });
   if (!userInfo.getUserById) return { notFound: true };
   return { props: { userInfo: userInfo.getUserById as User } };
 };
