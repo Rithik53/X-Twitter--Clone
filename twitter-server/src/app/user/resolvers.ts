@@ -4,6 +4,7 @@ import JWTService from "../../services/jwt";
 import { GraphqlContext } from "../../interfaces";
 import { User } from "@prisma/client";
 import UserService from "../../services/user";
+import { redisClient } from "../../clients/redis";
 
 const queries = {
   verifyGoogleToken: async (parent: any, { token }: { token: string }) => {
@@ -49,6 +50,12 @@ const extraResolvers = {
     },
     recommendedUsers: async (parent: User, _: any, ctx: GraphqlContext) => {
       if (!ctx.user) return [];
+
+      const cachedValue = await redisClient.get(
+        `RECOMMENDED_USERS:${ctx.user.id}`
+      );
+
+      if (cachedValue) return JSON.parse(cachedValue);
       const myFollowings = await prismaclient.follows.findMany({
         where: {
           follower: { id: ctx.user.id },
@@ -72,6 +79,11 @@ const extraResolvers = {
           }
         }
       }
+      //we canuse .setex and give argument in sec 10 - so the cachedata will be delted in 10 sec
+      await redisClient.set(
+        `RECOMMENDED_USERS:${ctx.user.id}`,
+        JSON.stringify(users)
+      );
       return users;
     },
   },
@@ -85,6 +97,7 @@ const mutations = {
   ) => {
     if (!ctx.user || !ctx.user.id) throw new Error("unauthenticated");
     await UserService.followUser(ctx.user.id, to);
+    await redisClient.del(`RECOMMENDED_USERS:${ctx.user.id}`);
     return true;
   },
   unfollowUser: async (
@@ -94,6 +107,7 @@ const mutations = {
   ) => {
     if (!ctx.user || !ctx.user.id) throw new Error("unauthenticated");
     await UserService.unfollowUser(ctx.user.id, to);
+    await redisClient.del(`RECOMMENDED_USERS:${ctx.user.id}`);
     return true;
   },
 };
