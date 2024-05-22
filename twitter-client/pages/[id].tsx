@@ -40,7 +40,7 @@ const UserProfilePage: NextPage<ServerProps> = (props) => {
       await graphqlClient.request(followUserMutation, {
         to: props.userInfo.id,
       });
-      await queryClient.invalidateQueries({ queryKey: ["current-user"] });
+      await queryClient.invalidateQueries(["current-user"]);
       toast.success("Followed user successfully", { id: "3" });
     } catch (error) {
       toast.error("Failed to follow user", { id: "3" });
@@ -54,7 +54,7 @@ const UserProfilePage: NextPage<ServerProps> = (props) => {
     await graphqlClient.request(unfollowUserMutation, {
       to: props.userInfo?.id,
     });
-    await queryClient.invalidateQueries({ queryKey: ["current-user"] });
+    await queryClient.invalidateQueries(["current-user"]);
   }, [props.userInfo?.id, queryClient]);
   return (
     <div>
@@ -128,9 +128,7 @@ export const getServerSideProps: GetServerSideProps<ServerProps> = async (
 
   if (!id) return { notFound: true, props: { userInfo: undefined } };
 
-  const userInfo = await graphqlClient.request(getUserByIdQuery, {
-    id: id as string,
-  });
+  const userInfo = await graphqlClient.request(getUserByIdQuery, { id });
   if (!userInfo.getUserById) return { notFound: true };
   return { props: { userInfo: userInfo.getUserById as User } };
 };

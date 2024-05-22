@@ -1,7 +1,6 @@
 import type { Config } from "tailwindcss";
 
 type AddUtilitiesFunction = (utilities: Record<string, any>) => void;
-
 const config: Config = {
   content: [
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
@@ -32,5 +31,4 @@ const config: Config = {
     },
   ],
 };
-
 export default config;
